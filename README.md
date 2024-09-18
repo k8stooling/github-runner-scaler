@@ -1,6 +1,6 @@
 # GitHub Runner Scaler API
 
-This is a simple API to count the number of queued GitHub Actions jobs for all repositories in a GitHub organization. The API is intended to be used as a KEDA scaler to adjust the number of GitHub runners dynamically based on the job queue length.
+This is a simple API to count the number of queued GitHub Actions jobs for all repositories in a GitHub organization. The API is intended to be used as a KEDA metric-api scaler to adjust the number of GitHub runners dynamically based on the job queue length.
 
 ## Features
 Fetches and counts the number of queued jobs across all repositories in a GitHub organization.
@@ -67,7 +67,28 @@ spec:
       port: 8080
       targetPort: 8080
   type: ClusterIP
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: github-runner
+spec:
+  scaleTargetRef:
+    name: github-runner
+  pollingInterval: 120
+  cooldownPeriod: 600
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+  - type: metrics-api
+    metadata:
+      targetValue: "1"
+      format: "json"
+      url: "http://github-runner-scaler.github-runner:8080/queued_jobs"
+      valueLocation: "queued_jobs"
 ```
+
+You might need to adopt the metrics-api url depending on your namespace.
 
 ## Example Request
 ```bash
