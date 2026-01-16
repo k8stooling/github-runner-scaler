@@ -3,7 +3,7 @@
 This is a simple API to count the number of queued GitHub Actions jobs for all repositories in a GitHub organization. The API is intended to be used as a KEDA metric-api scaler to adjust the number of GitHub runners dynamically based on the job queue length.
 
 ## Features
-Fetches and counts the number of queued jobs across all repositories in a GitHub organization.
+Fetches and counts the number of queued jobs across all repositories in a GitHub organization. Queries only repos that have been updated not longer than one year ago. Repo list is cached for 10 minutes.
 Caches the result for a configurable amount of time to reduce the number of API calls to GitHub.
 Supports both GitHub Enterprise and public GitHub by automatically adjusting API URLs.
 Exposes an HTTP endpoint to return the queued jobs count in JSON format.
@@ -74,7 +74,7 @@ metadata:
   name: github-runner
 spec:
   scaleTargetRef:
-    name: github-runner
+    name: github-runner-worker
   pollingInterval: 120
   cooldownPeriod: 600
   minReplicaCount: 1
@@ -113,5 +113,6 @@ Copy code
   Permissions: repo, workflow
 - GITHUB_RUNNER_SCALER_CACHE_TIMEOUT: Cache duration in seconds.
   Default: 60 seconds
+- GITHUB_RUNNER_LABEL: check jobs only for this label (optional)
 - PORT: The port the server will listen on.
   Default: 8080
